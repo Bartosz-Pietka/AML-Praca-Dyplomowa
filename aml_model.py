@@ -61,4 +61,3 @@ plt.show()
 top_alerts = df_combined.sort_values(by='Total_Risk_Score', ascending=False).head(10)
 
 top_alerts[['Transaction_Id', 'Sender_Country', 'Bene_Country', 'USD_amount', 'Total_Risk_Score']]
-
