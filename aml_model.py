@@ -10,9 +10,9 @@ print(f"Status: Wczytano {len(df_tx)} rekordów.")
 print(f"Format kwoty: {df_tx['USD_amount'].dtype}")
 
 df_combined = pd.merge(df_tx, 
-df_risk[['Bene_Country', 'Country_risk2']], 
-on='Bene_Country', 
-how='left')
+                       df_risk[['Bene_Country', 'Country_risk2']], 
+                       on='Bene_Country', 
+                       how='left')
 
 df_combined['Country_risk2'] = df_combined['Country_risk2'].fillna('Medium')
 
@@ -21,22 +21,20 @@ df_combined['Country_Score'] = df_combined['Country_risk2'].map(risk_map)
 
 mean_amt = df_combined['USD_amount'].mean()
 std_amt = df_combined['USD_amount'].std()
-df_combined['Amount_Score'] = ((df_combined['USD_amount'] - mean_amt) /
-std_amt).clip(0, 5) * 20
+df_combined['Amount_Score'] = ((df_combined['USD_amount'] - mean_amt) / std_amt).clip(0, 5) * 20
 
 df_combined['Total_Risk_Score'] = (
-df_combined['Country_Score'] * 0.7 + 
-df_combined['Amount_Score'] * 0.2 +
-np.where(df_combined['Transaction_Type'] == 'QUICK-PAYMENT', 10, 0)
+    df_combined['Country_Score'] * 0.7 + 
+    df_combined['Amount_Score'] * 0.2 +
+    np.where(df_combined['Transaction_Type'] == 'QUICK-PAYMENT', 10, 0)
 )
 
 def classify_risk(score):
-if score > 70: return 'High Risk'
-if score > 40: return 'Medium Risk'
-return 'Low Risk'
+    if score > 70: return 'High Risk'
+    if score > 40: return 'Medium Risk'
+    return 'Low Risk'
 
-df_combined['Final_Risk_Level'] =
-df_combined['Total_Risk_Score'].apply(classify_risk)
+df_combined['Final_Risk_Level'] = df_combined['Total_Risk_Score'].apply(classify_risk)
 
 print(df_combined['Final_Risk_Level'].value_counts())
 
@@ -54,7 +52,7 @@ plt.xticks(rotation=0)
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 
 for i, v in enumerate(risk_distribution):
-plt.text(i, v + 500, str(v), ha='center', fontweight='bold')
+    plt.text(i, v + 500, str(v), ha='center', fontweight='bold')
 
 plt.show()
 
