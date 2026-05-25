@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import FuncFormatter
 
 df_tx = pd.read_csv('Transakcje.csv', sep=';', decimal=',')
 df_risk = pd.read_csv('Country risk.csv', sep=';')
@@ -47,17 +48,15 @@ range_data = df_combined['Zakres w USD'].value_counts().sort_index()
 
 plt.style.use('seaborn-v0_8-muted')
 
-# WYKRES 1
 plt.figure(figsize=(10, 6))
 ax1 = sns.barplot(x=range_data.index, y=range_data.values, hue=range_data.index, palette='viridis', legend=False)
 plt.title('Wolumen transakcji w przedziałach kwotowych', fontsize=14, fontweight='bold')
 plt.ylabel('Liczba transakcji')
-plt.ticklabel_format(style='plain', axis='y') # Usuwa e+07
+plt.ticklabel_format(style='plain', axis='y')
 plt.grid(axis='y', linestyle='--', alpha=0.7)
 plt.savefig('eda_1_przedzialy.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-# WYKRES 2
 plt.figure(figsize=(10, 6))
 top_countries_count = df_combined.groupby('Bene_Country').size().sort_values(ascending=False).head(10)
 top_countries_count.plot(kind='barh', color='skyblue', edgecolor='black')
@@ -69,21 +68,47 @@ plt.gca().invert_yaxis()
 plt.savefig('eda_2_kraje_wolumen.png', dpi=300, bbox_inches='tight')
 plt.show()
 
-# WYKRES 3
-plt.figure(figsize=(8, 8))
-df_combined['Country_risk2'].value_counts().plot.pie(autopct='%1.1f%%', colors=['#66b3ff','#99ff99','#ff9999'], startangle=140)
-plt.title('Struktura ryzyka jurysdykcji beneficjentów', fontsize=14, fontweight='bold')
-plt.ylabel('')
-plt.savefig('eda_3_ryzyko_pie.png', dpi=300, bbox_inches='tight')
+dane_wykresu = df_combined['Country_risk2'].value_counts()
+plt.figure(figsize=(7, 4.5))
+plt.pie(
+    dane_wykresu, 
+    autopct='%1.1f%%', 
+    colors=['#66b3ff', '#99ff99', '#ff9999'], 
+    startangle=140,
+    labels=None,                   
+    textprops={'fontweight': 'bold'}
+)
+plt.title('Struktura ryzyka jurysdykcji beneficjentów', fontweight='bold', pad=15)
+plt.legend(
+    labels=['Niskie (Low)', 'Średnie (Medium)', 'Wysokie (High)'], 
+    loc="center left", 
+    bbox_to_anchor=(1, 0.5)
+)
 plt.show()
 
-# WYKRES 4
-plt.figure(figsize=(10, 6))
-sns.boxplot(x='Country_risk2', y='USD_amount', data=df_combined, palette='Set2', hue='Country_risk2', legend=False)
-plt.title('Wartość transakcji a poziom ryzyka kraju', fontsize=14, fontweight='bold')
-plt.xlabel('Poziom ryzyka kraju')
-plt.ylabel('Kwota transakcji (USD)')
-plt.savefig('eda_4_boxplot.png', dpi=300, bbox_inches='tight')
+plt.figure(figsize=(8, 5))
+kolejnosc = ['Low', 'Medium', 'High']
+ax = sns.boxplot(
+    x='Country_risk2', 
+    y='USD_amount', 
+    data=df_combined, 
+    order=kolejnosc,
+    palette=['#66b3ff', '#99ff99', '#ff9999'],
+    showmeans=True,
+    meanprops={"marker":"o", "markerfacecolor":"white", "markeredgecolor":"black", "markersize":"8"}
+)
+
+formatter = FuncFormatter(lambda x, pos: f'{int(x/1000)} tys' if x != 0 else '0')
+ax.yaxis.set_major_formatter(formatter)
+
+plt.title('Rozkład kwot transakcji wg poziomu ryzyka kraju', fontsize=12, fontweight='bold', pad=15)
+plt.xlabel('Poziom ryzyka kraju', fontsize=11)
+plt.ylabel('Kwota transakcji (USD)', fontsize=11)
+
+ax.set_xticklabels(['Niskie (Low)', 'Średnie (Medium)', 'Wysokie (High)'])
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.savefig('eda_4_boxplot_poprawiony.png', dpi=300, bbox_inches='tight')
 plt.show()
 
 #####################################################
@@ -160,13 +185,15 @@ plt.legend(loc="lower right")
 plt.grid(alpha=0.3)
 plt.show()
 
-plt.figure(figsize=(7, 5))
-y_pred = (y_scores > 0.70).astype(int) # Próg odcięcia 70 pkt
+plt.figure(figsize=(6.5, 5))
+y_pred = (y_scores > 0.70).astype(int) 
 cm = confusion_matrix(y_true, y_pred)
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
-            xticklabels=['Pozytywne', 'Fałszywe'], 
-            yticklabels=['Pozytywne', 'Fałszywe'])
-plt.title('Macierz Pomyłek')
-plt.ylabel('Stan faktyczny')
-plt.xlabel('Predykcja modelu')
+            xticklabels=['Normalna (0)', 'Podejrzana (1)'], 
+            yticklabels=['Normalna (0)', 'Podejrzana (1)'],
+            annot_kws={'size': 12})
+plt.title('Macierz Pomyłek Modelu Klasyfikacyjnego', fontsize=12, pad=15)
+plt.ylabel('Stan faktyczny (Rzeczywistość)', fontsize=11)
+plt.xlabel('Predykcja modelu (Decyzja)', fontsize=11)
+plt.savefig('eda_5_conf_matrix.png', dpi=300, bbox_inches='tight')
 plt.show()
